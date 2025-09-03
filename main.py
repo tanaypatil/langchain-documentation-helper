@@ -105,10 +105,11 @@ with col2:
 if prompt:
     with st.spinner("Generating response..."):
         generated_response = run_llm(
-            query=prompt
+            query=prompt,
+            chat_history=st.session_state["chat_history"]
         )
 
-        sources = set(doc.metadata["source"] for doc in generated_response["context"])
+        sources = set(doc.metadata["source"] for doc in generated_response["source_documents"])
         formatted_response = (
             f"{generated_response['result']} \n\n {create_sources_string(sources)}"
         )

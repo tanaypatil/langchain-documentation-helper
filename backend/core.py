@@ -22,7 +22,7 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 chroma = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
 
 
-def run_llm(query: str):
+def run_llm(query: str, chat_history: List[Dict[str, Any]] = []):
     # embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     # docsearch = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
     docsearch = PineconeVectorStore(
@@ -30,20 +30,20 @@ def run_llm(query: str):
     )
     chat = ChatOpenAI(verbose=True, temperature=0)
 
-    # rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
+    rephrase_prompt = hub.pull("langchain-ai/chat-langchain-rephrase")
 
     retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
     stuff_documents_chain = create_stuff_documents_chain(chat, retrieval_qa_chat_prompt)
 
-    # history_aware_retriever = create_history_aware_retriever(
-    #     llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
-    # )
+    history_aware_retriever = create_history_aware_retriever(
+        llm=chat, retriever=docsearch.as_retriever(), prompt=rephrase_prompt
+    )
     qa = create_retrieval_chain(
-        retriever=docsearch.as_retriever(), combine_docs_chain=stuff_documents_chain
+        retriever=history_aware_retriever, combine_docs_chain=stuff_documents_chain
     )
 
-    # result = qa.invoke(input={"input": query, "chat_history": chat_history})
-    result = qa.invoke(input={"input": query})
+    result = qa.invoke(input={"input": query, "chat_history": chat_history})
+    # result = qa.invoke(input={"input": query})
     formatted_result = {
         "result": result["answer"],
         "query": result["input"],
