@@ -27,15 +27,19 @@ embeddings = OpenAIEmbeddings(
     model="text-embedding-3-small",
     show_progress_bar=False,
     chunk_size=50,
-    retry_min_seconds=10,
+    retry_min_seconds=10
 )
+
 vectorstore = Chroma(persist_directory="chroma_db", embedding_function=embeddings)
 # vectorstore = PineconeVectorStore(
-#     index_name="langchain-docs-2025", embedding=embeddings
+#     index_name=os.getenv("PINECONE_INDEX_NAME"),
+#     embedding=embeddings
 # )
+
 tavily_extract = TavilyExtract()
 tavily_map = TavilyMap(max_depth=5, max_breadth=20, max_pages=1000)
 tavily_crawl = TavilyCrawl()
+
 
 async def index_documents_async(documents: List[Document], batch_size: int = 50):
     """Process documents in batches asynchronously."""
@@ -47,7 +51,7 @@ async def index_documents_async(documents: List[Document], batch_size: int = 50)
 
     # Create batches
     batches = [
-        documents[i : i + batch_size] for i in range(0, len(documents), batch_size)
+        documents[i: i + batch_size] for i in range(0, len(documents), batch_size)
     ]
 
     log_info(
@@ -83,22 +87,23 @@ async def index_documents_async(documents: List[Document], batch_size: int = 50)
         )
 
 
-async def main():
-    """Main async function to orchestrate the entire process."""
+async def main() -> None:
     log_header("DOCUMENTATION INGESTION PIPELINE")
 
     log_info(
         "🗺️  TavilyCrawl: Starting to crawl the documentation site",
         Colors.PURPLE,
     )
+
     # Crawl the documentation site
-    
     res = tavily_crawl.invoke({
-        "url": "https://python.langchain.com/",
-        "max_depth": 2,
-        "extract_depth": "advanced"
+        "url": "https://python.langchain.com",
+        "max_depth": 5,
+        "extract_depth": "advanced",
+        "instructions": "content on AI agents"
     })
-    all_docs = res["results"]
+    all_docs = [Document(page_content=result['raw_content'], metadata={"source": result["url"]}) for result in res["results"]]
+    log_success(f'Tavily Crawl successfully crawled: {len(all_docs)} URLS from documentation website')
 
     # Split documents into chunks
     log_header("DOCUMENT CHUNKING PHASE")
