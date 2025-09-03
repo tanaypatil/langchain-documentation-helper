@@ -44,7 +44,12 @@ def run_llm(query: str):
 
     # result = qa.invoke(input={"input": query, "chat_history": chat_history})
     result = qa.invoke(input={"input": query})
-    return result
+    formatted_result = {
+        "result": result["answer"],
+        "query": result["input"],
+        "source_documents": result["context"],
+    }
+    return formatted_result
 
 
 def format_docs(docs):
@@ -82,4 +87,4 @@ def run_llm2(query: str, chat_history: List[Dict[str, Any]] = []):
 
 if __name__ == "__main__":
     result = run_llm(query="What is Langchain chain?")
-    print(result["answer"])
+    print(result["result"])

@@ -110,13 +110,13 @@ if prompt:
 
         sources = set(doc.metadata["source"] for doc in generated_response["context"])
         formatted_response = (
-            f"{generated_response['answer']} \n\n {create_sources_string(sources)}"
+            f"{generated_response['result']} \n\n {create_sources_string(sources)}"
         )
 
         st.session_state["user_prompt_history"].append(prompt)
         st.session_state["chat_answers_history"].append(formatted_response)
         st.session_state["chat_history"].append(("human", prompt))
-        st.session_state["chat_history"].append(("ai", generated_response["answer"]))
+        st.session_state["chat_history"].append(("ai", generated_response["result"]))
 
 # Display chat history
 if st.session_state["chat_answers_history"]:
